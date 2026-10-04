@@ -27,26 +27,18 @@ jobs:
 
       - name: Build APK
         run: |
-          echo "### SUMMARY-TEST-MARKER $(date -u +%FT%TZ)" >> "$GITHUB_STEP_SUMMARY"
           set +e
           flutter build apk --release > /tmp/build.log 2>&1
           code=$?
           echo "BUILD_EXIT_CODE=$code"
           if [ "$code" -ne 0 ]; then
-            {
-              echo "## Build APK gagal - exit code $code"
-              echo ""
-              echo "### Baris error"
-              echo '```'
-              grep -a -iE "error:|FAILED|Execution failed|What went wrong|Exception" /tmp/build.log | head -40
-              echo '```'
-              echo ""
-              echo "### 40 baris terakhir log"
-              echo '```'
-              tail -40 /tmp/build.log
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
-            echo "--- ringkasan error ditulis ke job summary ---"
+            echo "### 60 baris terakhir build.log:"
+            tail -60 /tmp/build.log
+            body=$(tail -60 /tmp/build.log)
+            body="${body//'%'/'%25'}"
+            body="${body//$'\n'/'%0A'}"
+            body="${body//$'\r'/'%0D'}"
+            echo "::error::BUILD FAILED (exit $code). Log tail:%0A$body"
           fi
           exit "$code"
 
