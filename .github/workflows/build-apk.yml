@@ -27,6 +27,7 @@ jobs:
 
       - name: Build APK
         run: |
+          echo "### SUMMARY-TEST-MARKER $(date -u +%FT%TZ)" >> "$GITHUB_STEP_SUMMARY"
           set +e
           flutter build apk --release > /tmp/build.log 2>&1
           code=$?
