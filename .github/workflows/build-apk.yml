@@ -25,6 +25,20 @@ jobs:
 
       - run: flutter create . --org com.nopal --project-name jbag
 
+      - name: Paksa Gradle 8.7 (AGP 8.3 butuh Gradle 8.4+)
+        run: |
+          mkdir -p android/gradle/wrapper
+          printf '%s\n' \
+            'distributionBase=GRADLE_USER_HOME' \
+            'distributionPath=wrapper/dists' \
+            'distributionUrl=https\://services.gradle.org/distributions/gradle-8.7-all.zip' \
+            'networkTimeout=10000' \
+            'validateDistributionUrl=true' \
+            'zipStoreBase=GRADLE_USER_HOME' \
+            'zipStorePath=wrapper/dists' \
+            > android/gradle/wrapper/gradle-wrapper.properties
+          cat android/gradle/wrapper/gradle-wrapper.properties
+
       - name: Build APK
         run: |
           set +e
@@ -39,6 +53,8 @@ jobs:
             body="${body//$'\n'/'%0A'}"
             body="${body//$'\r'/'%0D'}"
             echo "::error::BUILD FAILED (exit $code). Log tail:%0A$body"
+          else
+            ls -lh build/app/outputs/flutter-apk/app-release.apk
           fi
           exit "$code"
 
