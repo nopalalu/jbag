@@ -10,23 +10,45 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-      
+
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.0'
           channel: 'stable'
-      
+
       - run: flutter pub get
-      
+
       - run: flutter create . --org com.nopal --project-name jbag
-      
-      - run: flutter build apk --release
-      
+
+      - name: Build APK
+        run: |
+          set +e
+          flutter build apk --release > /tmp/build.log 2>&1
+          code=$?
+          echo "BUILD_EXIT_CODE=$code"
+          if [ "$code" -ne 0 ]; then
+            {
+              echo "## Build APK gagal - exit code $code"
+              echo ""
+              echo "### Baris error"
+              echo '```'
+              grep -a -iE "error:|FAILED|Execution failed|What went wrong|Exception" /tmp/build.log | head -40
+              echo '```'
+              echo ""
+              echo "### 40 baris terakhir log"
+              echo '```'
+              tail -40 /tmp/build.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "--- ringkasan error ditulis ke job summary ---"
+          fi
+          exit "$code"
+
       - uses: actions/upload-artifact@v4
         with:
           name: jbag-apk
